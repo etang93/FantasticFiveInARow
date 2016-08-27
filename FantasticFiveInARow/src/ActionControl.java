@@ -68,14 +68,16 @@ public class ActionControl implements java.awt.event.ActionListener{
 				for(int j=0; j<19; j++){
 					if(boardView.goButtons[i][j] == source){
 						boardView.setPiece(currentPlayer, boardView.goButtons[i][j], i, j);
-						model.addStone(i, j, currentPlayer.getTurnVal());
+						model.setOriginalBoardVal(i, j, currentPlayer.getTurnVal());
 						if(model.checkWin(i, j, currentPlayer.getTurnVal())){
+							boardView.disableButtons();
 							if(JOptionPane.showConfirmDialog(null, String.format("%s WON! Play Again?", currentPlayer.getName()), "Winner!", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION){
 								//boardView.newGame();
 								//model.newGame();
 							}
 						}
 						currentPlayer = model.changePlayer(currentPlayer);
+						move();
 					}
 				}
 			}
@@ -83,13 +85,32 @@ public class ActionControl implements java.awt.event.ActionListener{
 	}
 
 	public void savePlayer(String name, int turn){
-		Player player = new Player(name, turn);
+		Player player = new Player(name, turn, false);
 		model.savePlayer(player);
 	}
 	
 	private void saveComputer(int turn){
-		Computer cmp = new Computer("Computer", turn);
+		Computer cmp = new Computer("Computer", turn, true);
 		model.savePlayer(cmp);
+	}
+	
+	private void move(){
+		model.setOriginalBoardState();
+		if(currentPlayer.getIsComputer()){
+			int moveX;
+			int moveY;
+			Computer tmp = (Computer) currentPlayer;
+			boardView.disableButtons();
+			currentPlayer.move(model.getCheckerBoard());
+			moveX = tmp.getMoveX();
+			moveY = tmp.getMoveY();
+			model.setOriginalBoardState();
+			boardView.computerClick(moveX, moveY);
+		} else {
+			boardView.enableButtons(model.getCheckerBoard());
+			currentPlayer.move(model.getCheckerBoard());
+		}
+		
 	}
 	
 	private void createBoard(){

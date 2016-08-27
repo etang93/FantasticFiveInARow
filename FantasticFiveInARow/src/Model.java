@@ -53,4 +53,24 @@ public class Model {
 	public void newGame(){
 		checker = new CheckGameEnd();
 	}
+	
+	public int[][] getCheckerBoard(){
+		return checker.getBoardVals();
+	}
+	
+	public void saveState(int[][] board){
+		checker.saveState(board);
+	}
+	
+	public void setOriginalBoardState(){
+		checker.setTmpBoard(checker.getState());
+	}
+	
+	public void setOriginalBoardVal(int x, int y, int stone){
+		checker.setActualBoardVal(x, y, stone);
+	}
+	
+	public int[][] getCleanState(){
+		return checker.getState();
+	}
 }

@@ -1,11 +1,13 @@
 
 public class Player {
-	private String name;
-	private int turnVal;
+	protected String name;
+	protected int turnVal;
+	protected boolean isComputer;
 	
-	Player(String _name, int _turnVal){
+	Player(String _name, int _turnVal, boolean _isComputer){
 		name = _name;
 		turnVal = _turnVal;
+		isComputer = _isComputer;
 	}
 	
 	public int getTurnVal(){
@@ -16,5 +18,12 @@ public class Player {
 		return name;
 	}
 	
+	public boolean getIsComputer(){
+		return isComputer;
+	}
+	
+	public void move(int[][] board){
+		//players just click onto the grid
+	}
 	
 }

@@ -136,7 +136,6 @@ public class BoardView extends JFrame{
 	
 	public void setPiece(Player player, JButton button, int col, int row){
 		
-		button.setText(null);
 		if(player.getTurnVal() == 0){
 			button.setIcon(new ImageIcon("src/img/Black_Piece.png"));
 			button.setDisabledIcon(new ImageIcon("src/img/Black_Piece.png"));
@@ -155,6 +154,29 @@ public class BoardView extends JFrame{
 	
 	public void showRules(){
 		
+	}
+	
+	public void disableButtons(){
+		for(int i = 0; i < goButtons.length; i++){
+			for(int j = 0; j < goButtons[i].length; j++){
+				goButtons[i][j].setEnabled(false);
+			}
+		}
+	}
+	
+	public void enableButtons(int[][] board){
+		for(int i = 0; i < board.length; i++){
+			for(int j = 0; j < board[i].length; j++){
+				if(board[i][j] == 2){
+					goButtons[i][j].setEnabled(true);
+				}
+			}
+		}
+	}
+	
+	public void computerClick(int x, int y){
+		goButtons[x][y].setEnabled(true);
+		goButtons[x][y].doClick();
 	}
 	
 	public boolean forfeitMessage(){

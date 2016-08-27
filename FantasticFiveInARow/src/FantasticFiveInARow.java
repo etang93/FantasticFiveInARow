@@ -5,7 +5,7 @@ import javax.activation.MimetypesFileTypeMap;
 public class FantasticFiveInARow {
 
 	public static void main(String[] args){
-		RenjuSplashScreen sc = new RenjuSplashScreen(5000);
+		RenjuSplashScreen sc = new RenjuSplashScreen(1000);
 		sc.showSplash();
 		
 		String filepath = "/src/img/Renju.jpg";
