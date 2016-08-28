@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.SpinnerNumberModel;
 
 public class SettingsView{
 
@@ -29,6 +30,7 @@ public class SettingsView{
 	public JRadioButton rbnTimerOn;
 	public JRadioButton rbnTimerOff;
 	
+	public SpinnerNumberModel snm;
 	public JSpinner spinTime;
 	
 	public JButton btnOk;
@@ -65,9 +67,17 @@ public class SettingsView{
 		btngrpTimer.add(rbnTimerOn);
 		btngrpTimer.add(rbnTimerOff);
 		
-		spinTime = new JSpinner();
+		snm = new SpinnerNumberModel(5, 1, 9, 1);
+		spinTime = new JSpinner(snm);
 		spinTime.setEditor(new JSpinner.DefaultEditor(spinTime));
+		
 		btnOk = new JButton("OK");
+		
+		if(rbnComputer.isSelected()){
+			rbnTimerOn.setEnabled(false);
+			rbnTimerOff.setEnabled(false);
+			spinTime.setEnabled(false);
+		}
 		
 		pnlSettings.setLayout(new GridLayout(0, 3));
 		pnlSettings.add(lblGameType);
@@ -99,6 +109,8 @@ public class SettingsView{
 		btnOk.addActionListener(controller);
 		rbnTimerOn.addActionListener(controller);
 		rbnTimerOff.addActionListener(controller);
+		rbn2Players.addActionListener(controller);;
+		rbnComputer.addActionListener(controller);
 	}
 	
 	public void addKeyController(KeyControl controller){
@@ -108,5 +120,9 @@ public class SettingsView{
 	
 	public void close(){
 		mainFrame.dispose();
+	}
+	
+	public int getTime(){
+		return (int) spinTime.getValue();
 	}
 }

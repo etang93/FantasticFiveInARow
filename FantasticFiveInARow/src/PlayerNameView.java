@@ -1,6 +1,11 @@
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.awt.Window;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,8 +26,11 @@ public class PlayerNameView{
 	}
 	
 	private void createScreen(){
+		JPanel borderOfBorder = new JPanel();
 		mainFrame = new JFrame();
 		pnlName = new JPanel();
+		
+		mainFrame.setSize(new Dimension(500, 500));
 		
 		name = new JTextField();
 		btnOK = new JButton("OK");
@@ -36,10 +44,17 @@ public class PlayerNameView{
 		
 		mainFrame.setTitle("Player Information");
 		
+		borderOfBorder.setLayout(new BorderLayout());
+		borderOfBorder.add(lblTitle, BorderLayout.NORTH);
+		borderOfBorder.add(pnlName, BorderLayout.CENTER);
+	
+		
 		mainFrame.setLayout(new BorderLayout());
-		mainFrame.add(lblTitle, BorderLayout.NORTH);
-		mainFrame.add(pnlName, BorderLayout.CENTER);
-		mainFrame.add(btnOK, BorderLayout.SOUTH);
+		
+		mainFrame.add(borderOfBorder, BorderLayout.NORTH);
+		mainFrame.add(btnOK, BorderLayout.CENTER);
+		mainFrame.add(Box.createGlue(), BorderLayout.WEST);
+		mainFrame.add(Box.createGlue(), BorderLayout.EAST);
 		
 		mainFrame.getRootPane().setDefaultButton(btnOK);
 		mainFrame.setLocationRelativeTo(null);

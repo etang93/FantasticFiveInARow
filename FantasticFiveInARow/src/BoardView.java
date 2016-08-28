@@ -20,6 +20,8 @@ public class BoardView extends JFrame{
 	JLabel lblTurnIndicator;
 	JLabel lblOpponentLastMove;
 	JPanel boardInstance;
+	JPanel timerAndTurn;
+	JPanel southPanel;
 	//2player system
 	Player p1;
 	Player p2;
@@ -34,19 +36,34 @@ public class BoardView extends JFrame{
 	//About menu options
 	JMenuItem rules;
 	JMenuItem about;
-	
+	//Views
 	AboutView aboutView;
+	RulesView rulesView;
+	//Buttons
+	JButton btnForfeit;
 	
-	public BoardView(Player _p1, Player _p2){
+	long timer;
+	boolean timerOn;
+	CountDownTimer cdtTimer;
+	
+	int currentTurn;
+	
+	public BoardView(Player _p1, Player _p2, boolean _timerOn, long _time){
 		super();
 		p1 = _p1;
 		p2 = _p2;
+		timerOn = _timerOn;
+		timer = _time;
 		createScreen();
 	}
 	
 	private void createScreen(){
 	    getContentPane();
+	    
 		boardInstance = new JPanel();
+		timerAndTurn = new JPanel();
+		southPanel = new JPanel();
+		
 		lblTitle = new JLabel("Fantastic Five In A Row");
 		lblTitle.setHorizontalAlignment(JLabel.CENTER);
 		
@@ -59,13 +76,29 @@ public class BoardView extends JFrame{
 		
 		boardInstance = board();
 		
+		
+		btnForfeit = new JButton("Forfeit");
+		
+		timerAndTurn.setLayout(new GridLayout(0, 1));
+		
+		if(timerOn){
+			cdtTimer = new CountDownTimer(timer, this);
+			timerAndTurn.add(cdtTimer);
+		}
+		timerAndTurn.add(lblTurnIndicator);
+		
+		southPanel.setLayout(new GridLayout(0, 1));
+		
+		southPanel.add(btnForfeit);
+		southPanel.add(lblOpponentLastMove);
+		
 		setTitle("Fantastic Five In A Row");
 		setJMenuBar(menuBar());
 		setLayout(new BorderLayout());
 				
-		add(lblTurnIndicator, BorderLayout.NORTH);
+		add(timerAndTurn, BorderLayout.NORTH);
 		add(boardInstance, BorderLayout.CENTER);
-		add(lblOpponentLastMove, BorderLayout.SOUTH);
+		add(southPanel, BorderLayout.SOUTH);
 		
 		setLocationRelativeTo(null);
 		
@@ -75,7 +108,6 @@ public class BoardView extends JFrame{
 	}
 	
 	private JMenuBar menuBar(){
-		
 		
 		menuBar = new JMenuBar();
 		mnuFile = new JMenu("File");
@@ -113,12 +145,7 @@ public class BoardView extends JFrame{
 				goBoard.add(goButtons[i][j]);
 			}
 		}
-
 		return goBoard;
-	}
-	
-	public void newGame(){
-		
 	}
 	
 	public void addActionController(ActionControl controller){
@@ -132,10 +159,10 @@ public class BoardView extends JFrame{
 		exit.addActionListener(controller);
 		rules.addActionListener(controller);
 		about.addActionListener(controller);
+		btnForfeit.addActionListener(controller);
 	}
 	
 	public void setPiece(Player player, JButton button, int col, int row){
-		
 		if(player.getTurnVal() == 0){
 			button.setIcon(new ImageIcon("src/img/Black_Piece.png"));
 			button.setDisabledIcon(new ImageIcon("src/img/Black_Piece.png"));
@@ -150,10 +177,12 @@ public class BoardView extends JFrame{
 		
 		button.setEnabled(false);
 		lblOpponentLastMove.setText(String.format("%s placed a stone at (%d, %d)", player.getName(), row, col));
+		
+		currentTurn = player.getTurnVal();
 	}
 	
 	public void showRules(){
-		
+		rulesView = new RulesView();
 	}
 	
 	public void disableButtons(){
@@ -179,13 +208,13 @@ public class BoardView extends JFrame{
 		goButtons[x][y].doClick();
 	}
 	
-	public boolean forfeitMessage(){
-		boolean forfeit = false;
-		
+	public void forfeitMessage(Player currentPlayer){
 		if(JOptionPane.showConfirmDialog(null, "Are you sure you want to forfeit?", "Forfeit", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION){
-			forfeit = true;
+			if(timerOn){
+				cdtTimer.stopTimer();
+			}
 		}
-		return forfeit;
+		
 	}
 	
 	public void showAbout(){
@@ -194,5 +223,46 @@ public class BoardView extends JFrame{
 	
 	public void exit(){
 		System.exit(0);
+	}
+	
+	public void resetTime(){
+		cdtTimer.updateTime();
+	}
+	
+	public void timesUp(){
+		Player currentPlayer;
+		if(currentTurn == p1.getTurnVal()){
+			currentPlayer = p2;
+		} else {
+			currentPlayer = p1;
+		}
+		JOptionPane.showMessageDialog(null, String.format("Time is up %s loses!", currentPlayer.getName()), "Time's Up", JOptionPane.INFORMATION_MESSAGE, null);
+		
+		playAgain(currentPlayer);
+	}
+	
+	public boolean playAgain(Player currentPlayer){
+		disableButtons();
+		if(JOptionPane.showConfirmDialog(null, String.format("%s WON! Play Again?", currentPlayer.getName()), "Winner!", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION){
+			setupNewGame();
+			return true;
+		}
+		return false;
+	}
+	
+	private void setupNewGame(){
+		getContentPane().removeAll();
+		revalidate();
+		createScreen();
+		revalidate();
+		repaint();
+	}
+	
+	public boolean newGame(){
+		if(JOptionPane.showConfirmDialog(null, "Are you sure you want to play a new game?", "New Game", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION){
+			
+			return true;
+		}
+		return false;
 	}
 }

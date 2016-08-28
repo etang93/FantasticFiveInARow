@@ -14,58 +14,59 @@ public class Computer extends Player {
 		scores = new HashMap<Integer, String>();
 		boardStates = new HashMap<Integer, int[][]>();
 	}
-	
+
 	public void move(int[][] _board) {
 		board = new int[19][19];
-		int maxKey = 0;;
+		int maxKey = -10000;
+		;
 		int minKey = 10000;
-		//create a deep copy of the array because java is stupid
-		for(int i = 0; i < _board.length; i++){
-			for(int j = 0; j < _board[i].length; j++){
-				if(_board[i][j] == 0){
+		// create a deep copy of the array because java is stupid
+		for (int i = 0; i < _board.length; i++) {
+			for (int j = 0; j < _board[i].length; j++) {
+				if (_board[i][j] == 0) {
 					board[i][j] = 0;
-				} else if(_board[i][j] == 1){
+				} else if (_board[i][j] == 1) {
 					board[i][j] = 1;
-				} else{
+				} else {
 					board[i][j] = 2;
 				}
 			}
 		}
-		
+
 		int test = minimax(_board, 0, true, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY);
 		for (int key : scores.keySet()) {
-		    if(key>maxKey){
-		    	maxKey = key;
-		    }
-		    if(key < minKey){
-		    	minKey = key;
-		    }
+			if (key > maxKey) {
+				maxKey = key;
+			}
+			if (key < minKey) {
+				minKey = key;
+			}
 		}
-		
+
 		String location = "";
-		
-		if(maxKey < -1*minKey){
-			location = scores.get(minKey);
-		}else{
-			location = scores.get(maxKey);
-		}
-		
+		System.out.println("maxKey: " + maxKey);
+		/*
+		 * if(maxKey < -1*minKey){ location = scores.get(minKey); }else{
+		 */
+		location = scores.get(maxKey);
+		// }
+
 		String[] locationsSplit = location.split(" ");
 		moveX = Integer.parseInt(locationsSplit[0]);
 		moveY = Integer.parseInt(locationsSplit[1]);
-		
+
 		boardStates.clear();
 		scores.clear();
 	}
 
-	public int getMoveX(){
+	public int getMoveX() {
 		return moveX;
 	}
-	
-	public int getMoveY(){
+
+	public int getMoveY() {
 		return moveY;
 	}
-	
+
 	private int minimax(int[][] _board, int depth, boolean computerTurn, double alpha, double beta) {
 		int stoneVal = this.turnVal;
 		int opponentStone = 0;
@@ -78,115 +79,166 @@ public class Computer extends Player {
 			opponentStone = 1;
 		}
 
+		// if(depth == 0){
+		saveState(_board, depth);
+		// }
+
 		if (depth <= MAX_DEPTH) {
 			int[][] tmpBoard = _board;
 
 			check.setTmpBoard(tmpBoard);
 			for (int i = 0; i < _board.length; i++) {
 				for (int j = 0; j < _board[i].length; j++) {
-					tmpBoard = check.getBoardVals();
-					if (tmpBoard[i][j] == 2) {
-						if (computerTurn) {
-							check.setBoardVal(i, j, stoneVal);
-							currentStone = stoneVal;
-							saveState(check.getBoardVals(), depth);
-						} else {
-							check.setBoardVal(i, j, opponentStone);
-							currentStone = opponentStone;
-							saveState(check.getBoardVals(), depth);
-						}
+					// tmpBoard = check.getBoardVals();
+					// There are no stones nearby, so don't place them there and
+					// don't waste time calculating
+					if (!checkForNearbyStones(check, i, j, MAX_DEPTH)) {
+						scores.put(-10000, i + " " + j);
+
+					} else {
+
 						/*
-						 * If there is a win on the board return There isn't a
-						 * need to continue calculating
+						 * if(depth != 0){ saveState(tmpBoard, depth); }
 						 */
-						if (check.Win(i, j, currentStone)) {
-							if (currentStone == opponentStone) {
-								return score - 10;
+
+						if (tmpBoard[i][j] == 2) {
+							if (computerTurn) {
+								check.setBoardVal(i, j, stoneVal);
+								tmpBoard = check.getBoardVals();
+								currentStone = stoneVal;
+								/*
+								 * if(tmpBoard[0][0] == 1 && tmpBoard[0][1] == 1
+								 * && tmpBoard[0][2] == 1) { System.out.println(
+								 * "Error here"); }
+								 */
+								// saveState(check.getBoardVals(), depth);
 							} else {
-								return score + 10;
+								check.setBoardVal(i, j, opponentStone);
+								tmpBoard = check.getBoardVals();
+								currentStone = opponentStone;
+								// saveState(check.getBoardVals(), depth);
 							}
-						}
-						if (depth == MAX_DEPTH) {
-							return getScore(check, currentStone, i, j);
-						}
-						// decrement score by 1 each time it does a level deeper
-						score = minimax(check.getBoardVals(), depth+1, !computerTurn, alpha, beta) - 1;
-					/*	if (computerTurn) {
-							alpha = Math.max(alpha, score);
-							// prune the game state
-							if (beta <= alpha) {
-								return 0;
+
+							/*
+							 * If there is a win on the board return There isn't
+							 * a need to continue calculating
+							 */
+							if (check.Win(i, j, currentStone)) {
+								if (currentStone == opponentStone) {
+									int myScore = getScore(check, stoneVal, i, j);
+									int opponentScore = getScore(check, opponentStone, i, j);
+									return opponentScore - myScore - 100;
+								} else {
+									int myScore = getScore(check, stoneVal, i, j);
+									int opponentScore = getScore(check, opponentStone, i, j);
+									return opponentScore - myScore + 100;
+								}
 							}
-						}else{
-							beta = Math.min(beta, score);
-							if(beta <= alpha){
-								return 0;
+							if (depth == MAX_DEPTH) {
+								int myScore = getScore(check, stoneVal, i, j);
+								int opponentScore = getScore(check, opponentStone, i, j);
+								return opponentScore - myScore;
 							}
-						} */
-						if(depth != 0){
-							check.setTmpBoard(getBoardState(depth-1));
-						}
-						if (depth == 1) {
-							if(!scores.containsKey(score)){
-								scores.put(score, i+" "+j);
+							// decrement score by 1 each time it does a level
+							// deeper
+							int scoreAdjuster = 10;
+							if (computerTurn) {
+								scoreAdjuster = -10;
+							}
+							score = minimax(check.getBoardVals(), depth + 1, !computerTurn, alpha, beta)
+									+ scoreAdjuster;
+									/*
+									 * if (computerTurn) { alpha =
+									 * Math.max(alpha, score); // prune the game
+									 * state if (beta <= alpha) { return 0; }
+									 * }else{ beta = Math.min(beta, score);
+									 * if(beta <= alpha){ return 0; } }
+									 */
+
+							// if(depth != 0){
+							check.setTmpBoard(_board);
+							// check.setTmpBoard(getBoardState(depth));
+							// }
+							if (depth == 1) {
+								if (!scores.containsKey(score)) {
+									scores.put(score, i + " " + j);
+									System.out.println("Score is :" + score);
+								} else {
+									scores.replace(score, i + " " + j);
+								}
 							}
 						}
 					}
+
 				}
 			}
 		} // Reached the as far as we want to go
 			// Add the final value to the scores list
-		
+
 		return score;
 	}
-	
-	private void saveState(int[][] tmpBoard, int depth){
+
+	private void saveState(int[][] tmpBoard, int depth) {
 		int[][] someBoard = new int[19][19];
-		for(int i = 0; i < tmpBoard.length; i++){
-			for(int j = 0; j < tmpBoard[i].length; j++){
-				if(tmpBoard[i][j] == 0){
+		for (int i = 0; i < tmpBoard.length; i++) {
+			for (int j = 0; j < tmpBoard[i].length; j++) {
+				if (tmpBoard[i][j] == 0) {
 					someBoard[i][j] = 0;
-				} else if(tmpBoard[i][j] == 1){
+				} else if (tmpBoard[i][j] == 1) {
 					someBoard[i][j] = 1;
-				} else{
+				} else {
 					someBoard[i][j] = 2;
 				}
 			}
 		}
-		if(boardStates.containsKey(depth)){
+		if (boardStates.containsKey(depth)) {
 			boardStates.replace(depth, someBoard);
-		}else{
+		} else {
 			boardStates.put(depth, someBoard);
 		}
 	}
-	
-	public int[][] getBoardState(int depth){
+
+	public int[][] getBoardState(int depth) {
 		return boardStates.get(depth);
 	}
-	
-	//Check if there is 3 stone available on the board
-	private boolean threeOnBoard(CheckGameEnd check, int stone, int x, int y) {
-		if(checkThreeAcross(check, stone, x, y)){
+
+	private boolean twoOnBoard(CheckGameEnd check, int stone) {
+		if (checkTwoAcross(check, stone)) {
 			return true;
-		} else if(checkThreeDown(check, stone, x, y)){
+		} else if (checkTwoDown(check, stone)) {
 			return true;
-		} else if(checkThreeUpDiag(check, stone, x, y)){
+		} else if (checkTwoUpDiag(check, stone)) {
 			return true;
-		}else if(checkThreeDownDiag(check, stone, x, y)){
+		} else if (checkTwoDownDiag(check, stone)) {
 			return true;
 		}
-		
+
+		return false;
+	}
+	
+	// Check if there is 3 stone available on the board
+	private boolean threeOnBoard(CheckGameEnd check, int stone) {
+		if (checkThreeAcross(check, stone)) {
+			return true;
+		} else if (checkThreeDown(check, stone)) {
+			return true;
+		} else if (checkThreeUpDiag(check, stone)) {
+			return true;
+		} else if (checkThreeDownDiag(check, stone)) {
+			return true;
+		}
+
 		return false;
 	}
 
-	private boolean fourOnBoard(CheckGameEnd check, int stone, int x, int y) {
-		if(checkFourAcross(check, stone, x, y)){
+	private boolean fourOnBoard(CheckGameEnd check, int stone) {
+		if (checkFourAcross(check, stone)) {
 			return true;
-		} else if(checkFourDown(check, stone, x, y)){
+		} else if (checkFourDown(check, stone)) {
 			return true;
-		} else if(checkFourUpDiag(check, stone, x, y)){
+		} else if (checkFourUpDiag(check, stone)) {
 			return true;
-		}else if(checkFourDownDiag(check, stone, x, y)){
+		} else if (checkFourDownDiag(check, stone)) {
 			return true;
 		}
 		return false;
@@ -194,326 +246,519 @@ public class Computer extends Player {
 
 	private int getScore(CheckGameEnd check, int stone, int x, int y) {
 		int score = 0;
-		if (fourOnBoard(check, stone, x, y)) {
-			score = 9;
-		} else if (threeOnBoard(check, stone, x, y)) {
-			score = 5;
-		} else {
-			score = 0;
+		if (fourOnBoard(check, stone)) {
+			score += 75;
+		} else if (threeOnBoard(check, stone)) {
+			score += 50;
+		} else if (twoOnBoard(check, stone)) {
+			score += 15;
 		}
 		return score;
 	}
-	
-	private boolean checkThreeAcross(CheckGameEnd check, int stone, int x, int y){
+
+	private boolean checkTwoAcross(CheckGameEnd check, int stone) {
 		int[][] tmp = check.getBoardVals();
 		int stonesInARow = 0;
-		//check for horizonal left
-		for(int i = y-1; i > y-2; i--){
-			if (i < 0) {
-				break;
+		// check for horizonal left
+		for (int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < tmp[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					if (stonesInARow == 2) {
+						return true;
+					}
+				} else {
+					stonesInARow = 0;
+				}
 			}
-			if(tmp[x][i] == stone){
-				stonesInARow++;
-			}else{
-				break;
-			}
-		}
-		//check for horizontal right
-		for(int i = y+1; i < y+2; i++){
-			if (i >= tmp.length) {
-				break;
-			}
-			if(tmp[x][i] == stone){
-				stonesInARow++;
-			} else{
-				break;
-			}
-		}
-		if(stonesInARow >= 3){
-			return true;
 		}
 		return false;
 	}
-	
-	private boolean checkThreeDown(CheckGameEnd check, int stone, int x, int y){
+
+	private boolean checkTwoDown(CheckGameEnd check, int stone) {
 		int tmp[][] = check.getBoardVals();
 		int stonesInARow = 0;
-		
-		for (int i = x - 1; i > i - 2; i--) {
-			if (i < 0) {
-				break;
-			}	
-			if (tmp[i][y] == stone) {
-				stonesInARow++;
-			} else {
-				break;
+
+		for (int i = 0; i < board.length; i++) {
+			for (int j = 0; j < board[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					for (int k = i + 1; k < board.length; k++) {
+						if (tmp[k][j] == stone) {
+							stonesInARow++;
+							if (stonesInARow == 2) {
+								return true;
+							}
+						} else {
+							stonesInARow = 0;
+							break;
+						}
+					}
+
+				} else {
+					stonesInARow = 0;
+				}
 			}
 		}
-		// check up to 2 spaces below the place stone
-		for (int i = x + 1; i < i + 2; i++) {
-			if (i >= tmp.length) {
-				break;
-			}
-			if (tmp[i][y] == stone) {
-				stonesInARow++;
-			} else {
-				break;
+		return false;
+	}
+
+	private boolean checkTwoUpDiag(CheckGameEnd check, int stone) {
+		int[][] tmp = check.getBoardVals();
+		int stonesInARow = 0;
+		int tmpY;
+		int tmpX;
+		// check diagonal bottom to top; right 4 and up 4 / <- that type of
+		// direction
+		for (int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < tmp[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					tmpX = i;
+					tmpY = j;
+					for (int k = tmpX + 1; k < tmp.length; k++) {
+
+						tmpY = tmpY + 1;
+						if (tmpY >= tmp[k].length) {
+							stonesInARow = 0;
+							break;
+						}
+
+						if (tmp[k][tmpY] == stone) {
+							stonesInARow++;
+							if (stonesInARow == 2) {
+								return true;
+							}
+						} else {
+							stonesInARow = 0;
+							break;
+						}
+					}
+				}
 			}
 		}
 
-		if (stonesInARow >= 3) {
+		return false;
+	}
+
+	private boolean checkTwoDownDiag(CheckGameEnd check, int stone) {
+		int[][] tmp = check.getBoardVals();
+		int stonesInARow = 0;
+		int tmpY;
+		int tmpX;
+		// check diagonal bottom to top; right 4 and up 4 / <- that type of
+		// direction
+		for (int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < tmp[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					tmpX = i;
+					tmpY = j;
+					for (int k = tmpX + 1; k < tmp.length; k++) {
+
+						tmpY = tmpY - 1;
+						if (tmpY < 0) {
+							stonesInARow = 0;
+							break;
+						}
+						if (tmp[k][tmpY] == stone) {
+							stonesInARow++;
+							if (stonesInARow == 2) {
+								return true;
+							}
+						} else {
+							stonesInARow = 0;
+							break;
+						}
+					}
+
+				}
+			}
+		}
+
+		return false;
+	}
+	
+	private boolean checkThreeAcross(CheckGameEnd check, int stone) {
+		int[][] tmp = check.getBoardVals();
+		int stonesInARow = 0;
+		// check for horizonal left
+		for (int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < tmp[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					if (stonesInARow == 3) {
+						return true;
+					}
+				} else {
+					stonesInARow = 0;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean checkThreeDown(CheckGameEnd check, int stone) {
+		int tmp[][] = check.getBoardVals();
+		int stonesInARow = 0;
+
+		for (int i = 0; i < board.length; i++) {
+			for (int j = 0; j < board[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					for (int k = i + 1; k < board.length; k++) {
+						if (tmp[k][j] == stone) {
+							stonesInARow++;
+							if (stonesInARow == 3) {
+								return true;
+							}
+						} else {
+							stonesInARow = 0;
+							break;
+						}
+					}
+
+				} else {
+					stonesInARow = 0;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean checkThreeUpDiag(CheckGameEnd check, int stone) {
+		int[][] tmp = check.getBoardVals();
+		int stonesInARow = 0;
+		int tmpY;
+		int tmpX;
+		// check diagonal bottom to top; right 4 and up 4 / <- that type of
+		// direction
+		for (int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < tmp[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					tmpX = i;
+					tmpY = j;
+					for (int k = tmpX + 1; k < tmp.length; k++) {
+
+						tmpY = tmpY + 1;
+						if (tmpY >= tmp[k].length) {
+							stonesInARow = 0;
+							break;
+						}
+
+						if (tmp[k][tmpY] == stone) {
+							stonesInARow++;
+							if (stonesInARow == 3) {
+								return true;
+							}
+						} else {
+							stonesInARow = 0;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private boolean checkThreeDownDiag(CheckGameEnd check, int stone) {
+		int[][] tmp = check.getBoardVals();
+		int stonesInARow = 0;
+		int tmpY;
+		int tmpX;
+		// check diagonal bottom to top; right 4 and up 4 / <- that type of
+		// direction
+		for (int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < tmp[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					tmpX = i;
+					tmpY = j;
+					for (int k = tmpX + 1; k < tmp.length; k++) {
+
+						tmpY = tmpY - 1;
+						if (tmpY < 0) {
+							stonesInARow = 0;
+							break;
+						}
+						if (tmp[k][tmpY] == stone) {
+							stonesInARow++;
+							if (stonesInARow == 3) {
+								return true;
+							}
+						} else {
+							stonesInARow = 0;
+							break;
+						}
+					}
+
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private boolean checkFourAcross(CheckGameEnd check, int stone) {
+		int[][] tmp = check.getBoardVals();
+		int stonesInARow = 0;
+		// check for horizonal left
+		for (int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < tmp[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					if (stonesInARow == 4) {
+						return true;
+					}
+				} else {
+					stonesInARow = 0;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean checkFourDown(CheckGameEnd check, int stone) {
+		int tmp[][] = check.getBoardVals();
+		int stonesInARow = 0;
+
+		for (int i = 0; i < board.length; i++) {
+			for (int j = 0; j < board[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					for (int k = i + 1; k < board.length; k++) {
+						if (tmp[k][j] == stone) {
+							stonesInARow++;
+							if (stonesInARow == 4) {
+								return true;
+							}
+						} else {
+							stonesInARow = 0;
+							break;
+						}
+					}
+
+				} else {
+					stonesInARow = 0;
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean checkFourUpDiag(CheckGameEnd check, int stone) {
+		int[][] tmp = check.getBoardVals();
+		int stonesInARow = 0;
+		int tmpY;
+		int tmpX;
+		// check diagonal bottom to top; right 4 and up 4 / <- that type of
+		// direction
+		for (int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < tmp[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					tmpX = i;
+					tmpY = j;
+					for (int k = tmpX + 1; k < tmp.length; k++) {
+
+						tmpY = tmpY + 1;
+						if (tmpY >= tmp[k].length) {
+							stonesInARow = 0;
+							break;
+						}
+
+						if (tmp[k][tmpY] == stone) {
+							stonesInARow++;
+							if (stonesInARow == 4) {
+								return true;
+							}
+						} else {
+							stonesInARow = 0;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private boolean checkFourDownDiag(CheckGameEnd check, int stone) {
+		int[][] tmp = check.getBoardVals();
+		int stonesInARow = 0;
+		int tmpY;
+		int tmpX;
+		// check diagonal bottom to top; right 4 and up 4 / <- that type of
+		// direction
+		for (int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < tmp[i].length; j++) {
+				if (tmp[i][j] == stone) {
+					stonesInARow++;
+					tmpX = i;
+					tmpY = j;
+					for (int k = tmpX + 1; k < tmp.length; k++) {
+
+						tmpY = tmpY - 1;
+						if (tmpY < 0) {
+							stonesInARow = 0;
+							break;
+						}
+						if (tmp[k][tmpY] == stone) {
+							stonesInARow++;
+							if (stonesInARow == 4) {
+								return true;
+							}
+						} else {
+							stonesInARow = 0;
+							break;
+						}
+					}
+
+				}
+			}
+		}
+
+		return false;
+	}
+
+	// if there aren't any stones nearby, why traverse?
+	private boolean checkForNearbyStones(CheckGameEnd check, int x, int y, int depth) {
+		if (checkNearbyAcross(check, x, y, depth)) {
+			return true;
+		} else if (checkNearbyDown(check, x, y, depth)) {
+			return true;
+		} else if (checkNearbyUpDiag(check, x, y, depth)) {
+			return true;
+		} else if (checkNearbyDownDiag(check, x, y, depth)) {
 			return true;
 		}
 		return false;
 	}
-	
-	private boolean checkThreeUpDiag(CheckGameEnd check, int stone, int x, int y){
+
+	// depth used to check x spaces away
+	private boolean checkNearbyAcross(CheckGameEnd check, int x, int y, int depth) {
 		int[][] tmp = check.getBoardVals();
-		int stonesInARow = 0;
+		// check for horizonal left
+		for (int i = y - 1; i > y - depth; i--) {
+			if (i < 0) {
+				break;
+			}
+			if (tmp[x][i] != 2) {
+				return true;
+			}
+		}
+		// check for horizontal right
+		for (int i = y + 1; i < y + depth; i++) {
+			if (i >= tmp.length) {
+				break;
+			}
+			if (tmp[x][i] != 2) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean checkNearbyDown(CheckGameEnd check, int x, int y, int depth) {
+		int tmp[][] = check.getBoardVals();
+
+		for (int i = x - 1; i > x - depth; i--) {
+			if (i < 0) {
+				break;
+			}
+			if (tmp[i][y] != 2) {
+				return true;
+			}
+		}
+		// check up to 2 spaces below the place stone
+		for (int i = x + 1; i < x + depth; i++) {
+			if (i >= tmp.length) {
+				break;
+			}
+			if (tmp[i][y] != 2) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean checkNearbyUpDiag(CheckGameEnd check, int x, int y, int depth) {
+		int[][] tmp = check.getBoardVals();
 		int tmpY = y;
 		// check diagonal bottom to top; right 4 and up 4 / <- that type of
 		// direction
-		for (int i = x - 1; i > i - 2; i--) {
+		for (int i = x - 1; i > x - depth; i--) {
 			if (i < 0) {
 				break;
 			}
 			tmpY++;
-			//System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
+			// System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
 			if (tmpY >= tmp[i].length) {
 				break;
 			}
-			if (tmp[i][tmpY] == stone) {
-				stonesInARow++;
-			} else {
-				break;
+			if (tmp[i][tmpY] != 2) {
+				return true;
 			}
 		}
 		// reset tmpY to y
 		tmpY = y;
 		//// check diagonal bottom to top; left 4 and down 4 / <- that type of
 		//// direction
-		for (int i = x + 1; i < i + 2; i++) {
+		for (int i = x + 1; i < x + depth; i++) {
 			if (i >= tmp.length) {
 				break;
 			}
 			tmpY--;
-			//System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
+			// System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
 			if (tmpY < 0) {
 				break;
 			}
-			if (tmp[i][tmpY] == stone) {
-				stonesInARow++;
-			} else {
-				break;
+			if (tmp[i][tmpY] != 2) {
+				return true;
 			}
-		}
-		//System.out.println(String.format("CheckUpward: x: %d y: %d stoneCount: %d", x, y, stonesInARow));
-		if (stonesInARow >= 3) {
-			return true;
 		}
 		return false;
 	}
-	
-	private boolean checkThreeDownDiag(CheckGameEnd check, int stone, int x, int y){
-		int[][] tmp = check.getBoardVals();
-		int stonesInARow = 0;
-		int tmpY = y;
-		// check diagonal bottom to top; right 4 and down 4 \ <- that type of
-		// direction
-		for (int i = x - 1; i > i - 2; i--) {
-			if (i < 0) {
-				break;
-			}
-			tmpY--;
-			//System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
-			if (tmpY < 0) {
-				break;
-			}
-			if (tmp[i][tmpY] == stone) {
-				stonesInARow++;
-			} else {
-				break;
-			}
-		}
-		//reset y value
-		tmpY = y;
-		// check diagonal bottom to top; left 4 and up 4 \ <- that type of
-		// direction
-		for (int i = x + 1; i < i + 2; i++) {
-			if (i >= tmp.length) {
-				break;
-			}
-			tmpY++;
-			//System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
-			if (tmpY >= tmp[i].length) {
-				break;
-			}
-			if (tmp[i][tmpY] == stone) {
-				stonesInARow++;
-			} else {
-				break;
-			}
-		}
-		//System.out.println(String.format("CheckDownward: x: %d y: %d stoneCount: %d", x, y, stonesInARow));
-		if (stonesInARow >= 3) {
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean checkFourAcross(CheckGameEnd check, int stone, int x, int y){
-		int[][] tmp = check.getBoardVals();
-		int stonesInARow = 0;
-		//check for horizonal left
-		for(int i = y-1; i > y-3; i--){
-			if (i < 0) {
-				break;
-			}
-			if(tmp[x][i] == stone){
-				stonesInARow++;
-			}else{
-				break;
-			}
-		}
-		//check for horizontal right
-		for(int i = y+1; i < y+3; i++){
-			if (i >= tmp.length) {
-				break;
-			}
-			if(tmp[x][i] == stone){
-				stonesInARow++;
-			} else{
-				break;
-			}
-		}
-		if(stonesInARow >= 4){
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean checkFourDown(CheckGameEnd check, int stone, int x, int y){
-		int tmp[][] = check.getBoardVals();
-		int stonesInARow = 0;
-		
-		for (int i = x - 1; i > i - 3; i--) {
-			if (i < 0) {
-				break;
-			}	
-			if (tmp[i][y] == stone) {
-				stonesInARow++;
-			} else {
-				break;
-			}
-		}
-		// check up to 2 spaces below the place stone
-		for (int i = x + 1; i < i + 3; i++) {
-			if (i >= tmp.length) {
-				break;
-			}
-			if (tmp[i][y] == stone) {
-				stonesInARow++;
-			} else {
-				break;
-			}
-		}
 
-		if (stonesInARow >= 4) {
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean checkFourUpDiag(CheckGameEnd check, int stone, int x, int y){
+	private boolean checkNearbyDownDiag(CheckGameEnd check, int x, int y, int depth) {
 		int[][] tmp = check.getBoardVals();
-		int stonesInARow = 0;
-		int tmpY = y;
-		// check diagonal bottom to top; right 4 and up 4 / <- that type of
-		// direction
-		for (int i = x - 1; i > i - 3; i--) {
-			if (i < 0) {
-				break;
-			}
-			tmpY++;
-			//System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
-			if (tmpY >= tmp[i].length) {
-				break;
-			}
-			if (tmp[i][tmpY] == stone) {
-				stonesInARow++;
-			} else {
-				break;
-			}
-		}
-		// reset tmpY to y
-		tmpY = y;
-		//// check diagonal bottom to top; left 4 and down 4 / <- that type of
-		//// direction
-		for (int i = x + 1; i < i + 3; i++) {
-			if (i >= tmp.length) {
-				break;
-			}
-			tmpY--;
-			//System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
-			if (tmpY < 0) {
-				break;
-			}
-			if (tmp[i][tmpY] == stone) {
-				stonesInARow++;
-			} else {
-				break;
-			}
-		}
-		//System.out.println(String.format("CheckUpward: x: %d y: %d stoneCount: %d", x, y, stonesInARow));
-		if (stonesInARow >= 4) {
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean checkFourDownDiag(CheckGameEnd check, int stone, int x, int y){
-		int[][] tmp = check.getBoardVals();
-		int stonesInARow = 0;
 		int tmpY = y;
 		// check diagonal bottom to top; right 4 and down 4 \ <- that type of
 		// direction
-		for (int i = x - 1; i > i - 3; i--) {
+		for (int i = x - 1; i > x - depth; i--) {
 			if (i < 0) {
 				break;
 			}
 			tmpY--;
-			//System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
+			// System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
 			if (tmpY < 0) {
 				break;
 			}
-			if (tmp[i][tmpY] == stone) {
-				stonesInARow++;
-			} else {
-				break;
+			if (tmp[i][tmpY] != 2) {
+				return true;
 			}
 		}
-		//reset y value
+		// reset y value
 		tmpY = y;
 		// check diagonal bottom to top; left 4 and up 4 \ <- that type of
 		// direction
-		for (int i = x + 1; i < i + 3; i++) {
+		for (int i = x + 1; i < x + depth; i++) {
 			if (i >= tmp.length) {
 				break;
 			}
 			tmpY++;
-			//System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
+			// System.out.println(String.format("i: %d tmpY: %d", i, tmpY));
 			if (tmpY >= tmp[i].length) {
 				break;
 			}
-			if (tmp[i][tmpY] == stone) {
-				stonesInARow++;
-			} else {
-				break;
+			if (tmp[i][tmpY] != 2) {
+				return true;
 			}
-		}
-		//System.out.println(String.format("CheckDownward: x: %d y: %d stoneCount: %d", x, y, stonesInARow));
-		if (stonesInARow >= 4) {
-			return true;
 		}
 		return false;
 	}

@@ -14,10 +14,7 @@ public class Controller {
 		
 		//actionController = new ActionControl(board, model);
 		actionController = new ActionControl(playerName, model);
-		startUp();
+		
 	}
 	
-	public void startUp(){
-	//	board.addActionController(actionController);
-	}
 }
