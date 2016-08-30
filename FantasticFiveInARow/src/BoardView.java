@@ -208,13 +208,12 @@ public class BoardView extends JFrame{
 		goButtons[x][y].doClick();
 	}
 	
-	public void forfeitMessage(Player currentPlayer){
+	public boolean forfeitMessage(Player currentPlayer){
 		if(JOptionPane.showConfirmDialog(null, "Are you sure you want to forfeit?", "Forfeit", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION){
-			if(timerOn){
-				cdtTimer.stopTimer();
-			}
+			
+			return true;
 		}
-		
+		return false;
 	}
 	
 	public void showAbout(){
@@ -244,13 +243,16 @@ public class BoardView extends JFrame{
 	public boolean playAgain(Player currentPlayer){
 		disableButtons();
 		if(JOptionPane.showConfirmDialog(null, String.format("%s WON! Play Again?", currentPlayer.getName()), "Winner!", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION){
+			if(timerOn){
+				cdtTimer.stopTimer();
+			}
 			setupNewGame();
 			return true;
 		}
 		return false;
 	}
 	
-	private void setupNewGame(){
+	public void setupNewGame(){
 		getContentPane().removeAll();
 		revalidate();
 		createScreen();
@@ -260,7 +262,7 @@ public class BoardView extends JFrame{
 	
 	public boolean newGame(){
 		if(JOptionPane.showConfirmDialog(null, "Are you sure you want to play a new game?", "New Game", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION){
-			
+			this.setVisible(false);
 			return true;
 		}
 		return false;

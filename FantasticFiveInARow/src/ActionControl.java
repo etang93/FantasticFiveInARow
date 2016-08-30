@@ -61,21 +61,23 @@ public class ActionControl implements java.awt.event.ActionListener {
 			boardView.showRules();
 		} else if (source == boardView.newGame) {
 			if (boardView.newGame()) {
-				newGame();
+				newGameWithSettings();
 			}
 		} else if (source == boardView.about) {
 			boardView.showAbout();
 		} else if (source == boardView.forfeit) {
-			boardView.forfeitMessage(currentPlayer);
-			boolean ng = boardView.playAgain(currentPlayer);
-			if (ng) {
-				newGame();
+			if (boardView.forfeitMessage(currentPlayer)) {
+				boolean ng = boardView.playAgain(currentPlayer);
+				if (ng) {
+					newGame();
+				}
 			}
 		} else if (source == boardView.btnForfeit) {
-			boardView.forfeitMessage(currentPlayer);
-			boolean ng = boardView.playAgain(currentPlayer);
-			if (ng) {
-				newGame();
+			if (boardView.forfeitMessage(currentPlayer)) {
+				boolean ng = boardView.playAgain(currentPlayer);
+				if (ng) {
+					newGame();
+				}
 			}
 		} else if (source == boardView.exit) {
 			boardView.exit();
@@ -106,18 +108,35 @@ public class ActionControl implements java.awt.event.ActionListener {
 	private void newGame() {
 		Player p1 = model.getFirstPlayer();
 		Player p2 = model.getSecondPlayer();
-		
+
 		model = null;
 		model = new Model();
-		
+
 		model.savePlayer(p1);
 		model.savePlayer(p2);
-		
+
 		playerView.addActionController(this);
 
 		boardView.addActionController(this);
 		currentPlayer.getTurnVal();
 
+	}
+
+	private void newGameWithSettings() {
+		Player p1 = model.getFirstPlayer();
+
+		model = null;
+		model = new Model();
+
+		model.savePlayer(p1);
+
+		launchSettings();
+
+		// model.savePlayer(p2);
+
+		playerView.addActionController(this);
+
+		boardView.addActionController(this);
 	}
 
 	public void savePlayer(String name, int turn) {

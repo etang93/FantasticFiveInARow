@@ -25,6 +25,8 @@ public class Model {
 	
 	public void savePlayer(Player player){
 		players[player.getTurnVal()] = player;
+		if(player.turnVal == 0)
+			turn = 1;
 	}
 	
 	public void addStone(int x, int y, int stone){
